@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export function useScrolled(threshold = 24) {
   const [scrolled, setScrolled] = useState(false);
@@ -15,35 +15,71 @@ export function useScrolled(threshold = 24) {
   return scrolled;
 }
 
+/** Navbar height + small buffer — section active once its top crosses this line */
+const SPY_OFFSET = 100;
+
 export function useScrollSpy(sectionIds: string[]) {
   const [activeId, setActiveId] = useState(sectionIds[0] ?? "");
+  const idsKey = sectionIds.join("|");
+
+  const resolveActive = useCallback(() => {
+    const ids = idsKey.split("|").filter(Boolean);
+    if (!ids.length) return "";
+
+    const scrollBottom = window.scrollY + window.innerHeight;
+    const docHeight = document.documentElement.scrollHeight;
+
+    // Bottom of page → last section (Contact)
+    if (scrollBottom >= docHeight - 48) {
+      return ids[ids.length - 1] ?? "";
+    }
+
+    // Active = last section whose top is at or above the spy line
+    let current = ids[0] ?? "";
+    for (const id of ids) {
+      const el = document.getElementById(id.replace("#", ""));
+      if (!el) continue;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      if (top <= window.scrollY + SPY_OFFSET) {
+        current = id.startsWith("#") ? id : `#${id}`;
+      } else {
+        break;
+      }
+    }
+    return current;
+  }, [idsKey]);
 
   useEffect(() => {
-    const elements = sectionIds
-      .map((id) => document.getElementById(id.replace("#", "")))
-      .filter(Boolean) as HTMLElement[];
+    let ticking = false;
 
-    if (!elements.length) return;
+    const update = () => {
+      setActiveId(resolveActive());
+      ticking = false;
+    };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
 
-        if (visible[0]) {
-          setActiveId(`#${visible[0].target.id}`);
-        }
-      },
-      {
-        rootMargin: "-40% 0px -50% 0px",
-        threshold: [0.1, 0.25, 0.5],
-      },
-    );
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    window.addEventListener("hashchange", update);
 
-    elements.forEach((element) => observer.observe(element));
-    return () => observer.disconnect();
-  }, [sectionIds]);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("hashchange", update);
+    };
+  }, [resolveActive]);
 
-  return activeId;
+  /** Call on nav click so highlight updates immediately from user interaction */
+  const activate = useCallback((href: string) => {
+    setActiveId(href);
+  }, []);
+
+  return { activeId, activate };
 }
