@@ -139,6 +139,7 @@ def build():
             ("Hyderabad, Telangana", None),
             ("+91 96183-94701", None),
             ("shankarshiva74541@gmail.com", "mailto:shankarshiva74541@gmail.com"),
+            ("Portfolio", "https://portfolio-mocha-mu-48.vercel.app/"),
             ("GitHub", "https://github.com/Samplerritgithu"),
             ("LinkedIn", "https://www.linkedin.com/in/chanda-shiva-shankar-3bb6b5260/"),
         ]
@@ -263,18 +264,18 @@ def build():
         new_y="NEXT",
     )
     for b in [
-        "Developed a full-stack blood donation platform with **Django/DRF** backend and **Flutter** mobile application, supporting donor registration, authentication, donor profiles, blood-group based search, availability and donation-history management.",
-        "Implemented location-based donor discovery using geospatial data, enabling emergency requests to identify nearby eligible donors and progressively expand the search radius when required.",
-        "Built secure REST APIs with **JWT** authentication, **Google OAuth** integration, OTP-based verification, and role-based access flows for users, donors and administrators.",
-        "Integrated **Redis**, **Django Channels** and asynchronous processing to support real-time communication and emergency donor notification workflows.",
-        "Designed donor eligibility logic based on last donation date and 90-day eligibility rules, with separate administrative views for eligible, ineligible and unavailable donors.",
-        "Developed and integrated the **Flutter** Android application with the Django backend, ensuring consistency between mobile and web registration, authentication, donor onboarding and emergency workflows.",
-        "Worked on production deployment and cloud integration, including **AWS/Vercel** environments, PostgreSQL/Supabase connectivity, environment configuration, API endpoints and release APK configuration.",
+        "Built a full-stack blood donation platform with **Django/DRF** and **Flutter** for donor registration, auth, profiles, blood-group search, availability, and donation history.",
+        "Implemented geospatial donor discovery so emergency requests find nearby eligible donors and expand search radius when needed.",
+        "Built secure REST APIs with **JWT**, **Google OAuth**, OTP verification, and role-based access for users, donors, and admins.",
+        "Integrated **Redis**, **Django Channels**, and async jobs for real-time communication and emergency donor notifications.",
+        "Designed 90-day donation eligibility rules with admin views for eligible, ineligible, and unavailable donors.",
+        "Shipped the **Flutter** Android app against the Django backend and deployed on **AWS/Vercel** with PostgreSQL/Supabase, env config, APIs, and release APK builds.",
     ]:
         pdf.bullet(b)
 
-    # Keep FlightDeck Aviators fully on the next page (no split)
-    pdf.add_page()
+    # Start FlightDeck on page 2 only if page 1 still has room (avoids orphan blank page)
+    if pdf.page == 1:
+        pdf.add_page()
     pdf.set_font("Times", "B", JOB)
     pdf.cell(0, 10, "FlightDeck - Aviation Platform for Indian Aviators", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Times", "I", META)
